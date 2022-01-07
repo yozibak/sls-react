@@ -1,0 +1,24 @@
+type Query {
+    getMemberById(id: ID!): Member!
+    listMembers: [Member]
+}
+
+type Mutation {
+    createMember(newMember: MemberInput): Member!
+}
+
+type Subscription {
+    onCreateMember: Member
+        @aws_subscribe(mutations: ["createMember"])
+}
+
+type Member {
+    id: ID!
+    name: String!
+    createdAt: AWSDateTime!
+    updatedAt: AWSDateTime!
+}
+
+input MemberInput {
+    name: String!
+}

@@ -1,0 +1,64 @@
+
+# DynamoDB
+
+MemberTable:
+  Type: AWS::DynamoDB::Table
+  Properties: 
+    AttributeDefinitions: 
+        - AttributeName: id
+          AttributeType: S
+    BillingMode: PAY_PER_REQUEST
+    KeySchema:
+        - AttributeName: id
+          KeyType: HASH
+    TableName: sls-members
+    Tags: 
+      - Key: Name
+        Value: sls-member-table
+
+# Cognito 
+CognitoUserPool:
+  Type: AWS::Cognito::UserPool
+  Properties: 
+    UsernameAttributes: 
+      - email
+    UserPoolName: sls-playground-users
+
+CognitoUserPoolClient:
+  Type: AWS::Cognito::UserPoolClient
+  Properties:
+    ClientName: sls-playground-userpool-client
+    UserPoolId: !Ref CognitoUserPool
+
+CognitoAdminGroup:
+    Type: AWS::Cognito::UserPoolGroup
+    Properties:
+      Description: Admin users
+      GroupName: admin
+      Precedence: 0
+      RoleArn: !GetAtt ["CognitoAdminIAMRole", "Arn"]
+      UserPoolId:
+        Ref: CognitoUserPool
+
+CognitoAdminIAMRole:
+  Type: AWS::IAM::Role
+  Properties:
+    AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: "Allow" 
+            Principal:
+              Federated: "cognito-identity.amazonaws.com"
+            Action:
+              - "sts:AssumeRoleWithWebIdentity"
+    Description: String
+    Policies:
+      - PolicyName: "sls-playground-admin-group-policy"
+        PolicyDocument:
+          Version: "2012-10-17"
+          Statement:
+            - Effect: "Allow"
+              Action:
+                - "dynamodb:*"
+              Resource:
+                - Fn::GetAtt: ["MemberTable", "Arn"]

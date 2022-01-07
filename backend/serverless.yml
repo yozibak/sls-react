@@ -1,0 +1,43 @@
+service: serverless-appsync-backend
+
+frameworkVersion: '2'
+
+provider:
+  name: aws
+  runtime: nodejs12.x
+  lambdaHashingVersion: 20201221
+  region: ap-northeast-1
+
+plugins:
+  - serverless-appsync-plugin
+
+custom:
+  appSync:
+    name: sls-appsync-playground
+    authenticationType: AMAZON_COGNITO_USER_POOLS
+    userPoolConfig:
+      defaultAction: ALLOW
+      userPoolId: 
+        Ref: CognitoUserPool
+  mappingTemplatesLocation: mapping-templates
+  mappingTemplates:
+    - type: Query
+      field: getMemberById
+      dataSource: MembersTable
+      request: "./mapping-templates/getMemberById.req.vtl"
+      response: "./mapping-templates/getMemberById.res.vtl"
+    - type: Mutation
+      field: createMember
+      dataSource: MembersTable
+      request: "/mapping-templates/createMember.req.vtl"
+      response: "/mapping-templates/createMember.res.vtl"
+  schema: schema.graphql
+  dataSources:
+    - type: AMAZON_DYNAMODB
+      name: MembersTable
+      config:
+        tableName: sls-members
+
+resources:
+ Resources:
+  ${file(resources.yml)}
